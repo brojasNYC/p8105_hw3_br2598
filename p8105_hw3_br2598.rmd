@@ -1,0 +1,331 @@
+---
+title: "p8105_hw3_br2598"
+author: "Brandon Rojas"
+date: "10/17/2021"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(p8105.datasets)
+data("instacart")
+data("BRFSS")
+
+library(tidyverse)
+library(viridis)
+library(dplyr)
+library(ggplot2)
+# 
+# knitr::opts_chunk$set(
+#   fig.width = 6,
+#   fig.asp = .6,
+#   out.width = "90%"
+# )
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Problem 1 - Instacart Online Grocery Shopping Dataset 2017
+
+
+The goal is to do some exploration of this dataset. To that end:
+
+** (i) write a short description of the dataset, noting the size and structure of the data, describing some key variables, and giving illustrative examples of observations. Then, do or answer the following (commenting on the results of each):
+
+Instacart is an online grocery service that connects shoppers to local grocery stores. The **_Instacart_** dataset has `r ncol(instacart)` variables and `r nrow(instacart)` observations, representing over 3M orders for 200K Instacart users. 
+
+The dataset is a`r class(instacart)[2]`, and and contains information on the types of products sold, organized by "aisles" and departments based on those generally found in supermarkets.
+
+From these one can infer customer behaviors using the "user_id" column, and, in the non-anonymoized version, the user demographics (i.e. men aged 21-28 are more likely to buy pizza on a Friday after 7pm).
+
+
+```{r}
+aisle_count <- instacart %>% 
+  group_by(aisle, department) %>% 
+  summarize(
+    n_obs = n())
+
+dept_count <- instacart %>% 
+  group_by(department) %>% 
+  summarize(
+    n_obs = n())
+
+top_aisles = sort(table(instacart$aisle), decreasing = TRUE)[1:5] #find a way to do with count()
+
+```
+
+**a) How many aisles are there? Which aisles are most items ordered from? **
+
+There are `r nrow(aisle_count)` aisles, `r nrow(dept_count)` departments, and the top aisles are `r top_aisles`
+
+The top five aisles are fresh vegetables, fresh fruits, packaged vegetables and fruits, yogurt and packaged cheese.
+
+**b) Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it. **
+
+There are 39 aisles with greater than 10K items ordered.
+
+```{r}
+aisle_subten <- aisle_count %>% 
+  filter(n_obs > 10000)
+
+#Winner chart. Make sure it displays right it github_document. 
+aisle_subten %>%
+  ggplot(aes(x = reorder(aisle, -n_obs), y = n_obs, fill = department)) +
+  geom_col(aes(color = department), size = 1) +
+  #scale_fill_brewer(palette = "Dark") +
+  scale_y_continuous(expand = c(0, 0.1)) +
+  coord_flip() +
+  #facet_grid(rows = vars(department), scales = "free_y", switch = "y", space = "free_y") +
+  labs(
+    title = "Which aisles move the most products?",
+    subtitle = "By Department, nationally",
+    caption = "Source: Instacart 2017",
+    y = "Number of purchases",
+    x = "Aisle by Department"
+  ) +
+  #theme_minimal(base_family = "Arial") +
+  theme_classic() +
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+    plot.title = element_text(size = 15, face = "bold"),
+    strip.text.y = element_text(angle = 270, face = "bold"),
+    strip.placement = "outside",
+    axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+    axis.title.y = element_blank(),
+    axis.text = element_text(size = 10),
+    legend.position = "right",
+    panel.grid.major.y = element_blank(),
+    )
+
+
+
+#Removing gridlines, OK but still messy.
+# p1 <- ggplot(aisle_subten, aes(x = aisle, y = n_obs)) +
+#     scale_color_viridis_d() +
+#     labs(color = "Department", shape = "Department", x = "Aisle",
+#          y = "Number of purchases") + ggtitle("Number of items ordered by aisle, stratified by Department ") +
+#     theme_light(base_size = 12) +
+#     theme(panel.grid.minor = element_blank()) +
+#     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0)) +
+#     facet_grid(. ~ department, scales = "free_x", space = 'free') + 
+#   theme(
+#     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+#     plot.title = element_text(size = 15, face = "bold"),
+#     strip.text.y = element_text(angle = 270, face = "bold"),
+#     strip.placement = "outside",
+#     #axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+#     #axis.title.y = element_blank(),
+#     #axis.text = element_text(size = 10),
+#     legend.position = "none",
+#     panel.grid.major.y = element_blank(),
+#     )
+# 
+# p1 + geom_point(aes(color = department), size = 3)
+
+
+# #Messy attempt
+# p1 <- ggplot(aisle_subten, aes(x = aisle, y = n_obs)) +
+#     scale_color_viridis_d() +
+#     labs(color = "Department", shape = "Department", x = "Aisle",
+#          y = "Number of purchases") + ggtitle("Number of items ordered by aisle, stratified by Department ") +
+#     theme_light(base_size = 12) +
+#     theme(panel.grid.minor = element_blank()) +
+#     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0)) +
+#     facet_grid(. ~ department, scales = "free_x", space = 'free')
+# 
+# p1 + geom_point(aes(color = department), size = 3)
+# 
+
+
+ # Original 
+# 
+# aisle_subten %>%
+#   ggplot(aes(x = aisle, y = n_obs, fill = department)) +
+#   geom_col(alpha = 0.8, width = 0.85) +
+#   scale_fill_brewer(palette = "Dark2") +
+#   scale_y_continuous(expand = c(0, 0.1)) +
+#   coord_flip() +
+#   #facet_grid(rows = vars(department), scales = "free_y", switch = "y", space = "free_y") +
+#   labs(
+#     title = "Which aisles move the most products?",
+#     subtitle = "By Department, nationally",
+#     caption = "Source: Instacart 2017",
+#     y = "Number of purchases",
+#     x = "Aisle by Department"
+#   ) +
+#   theme_minimal(base_family = "Arial") +
+#   theme(
+#     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+#     plot.title = element_text(size = 15, face = "bold"),
+#     strip.text.y = element_text(angle = 270, face = "bold"),
+#     strip.placement = "outside",
+#     #axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+#     #axis.title.y = element_blank(),
+#     #axis.text = element_text(size = 10),
+#     legend.position = "none",
+#     panel.grid.major.y = element_blank(),
+#     )
+  
+
+```
+
+**c) Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.**
+
+```{r}
+top_3_items <- instacart %>% 
+  group_by(aisle, product_name) %>%
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
+  summarize(number_of_orders = n()) %>%
+  arrange(desc(number_of_orders)) %>% 
+  slice(1:3)
+
+top_3_items
+```
+
+
+**d) Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table). **
+
+```{r}
+# For recoding lady apple
+# Instead of hardcoding the days
+# Use a dataframe for 0-6 and sunday-saturday then do a join of the two
+#day_df <- c((0:6), "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+
+day_df <- data.frame(weekday=rep(0:6))
+day_df$weekday_name <- factor(day_df$weekday, levels=0:6,
+                      labels=c("Sunday", "Monday", "Tuesday", "Wednesday",
+                               "Thursday", "Friday", "Saturday"))
+
+pink_coffee <- instacart %>% 
+  group_by(product_name, order_dow) %>%
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
+  summarize(m_hour = mean(order_hour_of_day)) %>%
+  mutate(order_dow = recode(order_dow, `0` = "Sunday", `1` = "Monday", `2` = "Tuesday", `3`="Wednesday", `4` = "Thursday", `5` = "Friday", `6` = "Saturday")) %>%
+  pivot_wider(
+    names_from = "order_dow",
+    values_from = "m_hour") %>%
+  knitr::kable(digits = 2) # 2 sigfig
+pink_coffee  
+
+
+
+```
+
+## Problem 2
+First, do some data cleaning:
+
+** a) format the data to use appropriate variable names; focus on the “Overall Health” topic include only responses from “Excellent” to “Poor” 
+organize responses as a factor taking levels ordered from “Poor” to “Excellent”
+
+```{r}
+#Cleaning the data by adding in States and removing extra text from County.
+
+brfss_clean_2010<- brfss_smart2010 %>% 
+  rename(State = Locationabbr) %>%
+  rename(County = Locationdesc) %>%
+  filter(QuestionID %in% c("GENHLTH")) %>%
+  mutate(County = gsub("^.{0,5}", "", County)) %>%  #some regex to remove first 5 characters from every location description 
+  factor(Response, levels = 0:4,
+         labels = c("Poor", "Fair", "Good", "Very good",
+                               "Excellent"))
+
+
+```
+
+
+```{r}
+day_df <- data.frame(weekday=rep(0:6))
+day_df$weekday_name <- factor(day_df$weekday, levels=0:6,
+                      labels=c("Sunday", "Monday", "Tuesday", "Wednesday",
+                               "Thursday", "Friday", "Saturday"))
+
+brfss_clean <- brfss_smart2010 %>% filter(QuestionID %in% c("GENHLTH")) 
+  
+
+#brfss_factor_response <- data.frame
+
+
+```
+
+
+
+
+Using this dataset, do or answer the following (commenting on the results of each):
+
+b) In 2002, which states were observed at 7 or more locations? What about in 2010?
+
+Find states with in 2002 with 7 or more unique geolocations. Repeat for 2010, use inline r.
+
+c) Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. 
+
+filter for excellent responses, have only year, state columns, mutate out a avg_data_value for locations per state.
+
+```{r}
+
+```
+
+
+d) Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
+https://stats.idre.ucla.edu/r/faq/how-can-i-visualize-longitudinal-data-in-ggplot2/
+
+
+```{r}
+
+```
+
+
+e) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+
+use geom facet, box plots, violin or ridge plots should work fine
+
+```{r}
+
+```
+
+
+## Problem 3
+
+Accelerometers have become an appealing alternative to self-report techniques for studying physical activity in observational studies and clinical trials, largely because of their relative objectivity. During observation periods, the devices measure “activity counts” in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations.
+
+This problem uses five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). The data can be downloaded here. In this spreadsheet, variables activity.* are the activity counts for each minute of a 24-hour day starting at midnight.
+
+
+(i) Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes.
+
+a) Load, tidy, and otherwise wrangle the data. 
+
+(b) Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+
+
+(c) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
+
+
+(d) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+
+
+
+
+
+
+When using pivot_longer names should be minute, so output is continuous
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
