@@ -13,6 +13,7 @@ library(tidyverse)
 library(viridis)
 library(dplyr)
 library(ggplot2)
+library(ggridges)
 # 
 # knitr::opts_chunk$set(
 #   fig.width = 6,
@@ -47,11 +48,13 @@ From these one can infer customer behaviors using the "user_id" column, and, in 
 
 ```{r}
 aisle_count <- instacart %>% 
+  janitor::clean_names() %>%
   group_by(aisle, department) %>% 
   summarize(
     n_obs = n())
 
 dept_count <- instacart %>% 
+  janitor::clean_names() %>%
   group_by(department) %>% 
   summarize(
     n_obs = n())
@@ -74,7 +77,7 @@ There are 39 aisles with greater than 10K items ordered.
 aisle_subten <- aisle_count %>% 
   filter(n_obs > 10000)
 
-#Winner chart. Make sure it displays right it github_document. 
+#best attempt chart. Make sure it displays right it github_document..
 aisle_subten %>%
   ggplot(aes(x = reorder(aisle, -n_obs), y = n_obs, fill = department)) +
   geom_col(aes(color = department), size = 1) +
@@ -89,7 +92,6 @@ aisle_subten %>%
     y = "Number of purchases",
     x = "Aisle by Department"
   ) +
-  #theme_minimal(base_family = "Arial") +
   theme_classic() +
   theme(
     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
@@ -97,7 +99,6 @@ aisle_subten %>%
     strip.text.y = element_text(angle = 270, face = "bold"),
     strip.placement = "outside",
     axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
-    axis.title.y = element_blank(),
     axis.text = element_text(size = 10),
     legend.position = "right",
     panel.grid.major.y = element_blank(),
@@ -105,80 +106,13 @@ aisle_subten %>%
 
 
 
-#Removing gridlines, OK but still messy.
-# p1 <- ggplot(aisle_subten, aes(x = aisle, y = n_obs)) +
-#     scale_color_viridis_d() +
-#     labs(color = "Department", shape = "Department", x = "Aisle",
-#          y = "Number of purchases") + ggtitle("Number of items ordered by aisle, stratified by Department ") +
-#     theme_light(base_size = 12) +
-#     theme(panel.grid.minor = element_blank()) +
-#     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0)) +
-#     facet_grid(. ~ department, scales = "free_x", space = 'free') + 
-#   theme(
-#     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
-#     plot.title = element_text(size = 15, face = "bold"),
-#     strip.text.y = element_text(angle = 270, face = "bold"),
-#     strip.placement = "outside",
-#     #axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
-#     #axis.title.y = element_blank(),
-#     #axis.text = element_text(size = 10),
-#     legend.position = "none",
-#     panel.grid.major.y = element_blank(),
-#     )
-# 
-# p1 + geom_point(aes(color = department), size = 3)
-
-
-# #Messy attempt
-# p1 <- ggplot(aisle_subten, aes(x = aisle, y = n_obs)) +
-#     scale_color_viridis_d() +
-#     labs(color = "Department", shape = "Department", x = "Aisle",
-#          y = "Number of purchases") + ggtitle("Number of items ordered by aisle, stratified by Department ") +
-#     theme_light(base_size = 12) +
-#     theme(panel.grid.minor = element_blank()) +
-#     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0)) +
-#     facet_grid(. ~ department, scales = "free_x", space = 'free')
-# 
-# p1 + geom_point(aes(color = department), size = 3)
-# 
-
-
- # Original 
-# 
-# aisle_subten %>%
-#   ggplot(aes(x = aisle, y = n_obs, fill = department)) +
-#   geom_col(alpha = 0.8, width = 0.85) +
-#   scale_fill_brewer(palette = "Dark2") +
-#   scale_y_continuous(expand = c(0, 0.1)) +
-#   coord_flip() +
-#   #facet_grid(rows = vars(department), scales = "free_y", switch = "y", space = "free_y") +
-#   labs(
-#     title = "Which aisles move the most products?",
-#     subtitle = "By Department, nationally",
-#     caption = "Source: Instacart 2017",
-#     y = "Number of purchases",
-#     x = "Aisle by Department"
-#   ) +
-#   theme_minimal(base_family = "Arial") +
-#   theme(
-#     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
-#     plot.title = element_text(size = 15, face = "bold"),
-#     strip.text.y = element_text(angle = 270, face = "bold"),
-#     strip.placement = "outside",
-#     #axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
-#     #axis.title.y = element_blank(),
-#     #axis.text = element_text(size = 10),
-#     legend.position = "none",
-#     panel.grid.major.y = element_blank(),
-#     )
-  
-
 ```
 
 **c) Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.**
 
 ```{r}
 top_3_items <- instacart %>% 
+  janitor::clean_names() %>%
   group_by(aisle, product_name) %>%
   filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
   summarize(number_of_orders = n()) %>%
@@ -197,13 +131,8 @@ top_3_items
 # Use a dataframe for 0-6 and sunday-saturday then do a join of the two
 #day_df <- c((0:6), "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
-
-day_df <- data.frame(weekday=rep(0:6))
-day_df$weekday_name <- factor(day_df$weekday, levels=0:6,
-                      labels=c("Sunday", "Monday", "Tuesday", "Wednesday",
-                               "Thursday", "Friday", "Saturday"))
-
 pink_coffee <- instacart %>% 
+  janitor::clean_names() %>%
   group_by(product_name, order_dow) %>%
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   summarize(m_hour = mean(order_hour_of_day)) %>%
@@ -226,67 +155,87 @@ organize responses as a factor taking levels ordered from “Poor” to “Excel
 
 ```{r}
 #Cleaning the data by adding in States and removing extra text from County.
-
-brfss_clean_2010<- brfss_smart2010 %>% 
-  rename(State = Locationabbr) %>%
-  rename(County = Locationdesc) %>%
-  filter(QuestionID %in% c("GENHLTH")) %>%
-  mutate(County = gsub("^.{0,5}", "", County)) %>%  #some regex to remove first 5 characters from every location description 
-  factor(Response, levels = 0:4,
-         labels = c("Poor", "Fair", "Good", "Very good",
-                               "Excellent"))
-
-
-```
-
-
-```{r}
-day_df <- data.frame(weekday=rep(0:6))
-day_df$weekday_name <- factor(day_df$weekday, levels=0:6,
-                      labels=c("Sunday", "Monday", "Tuesday", "Wednesday",
-                               "Thursday", "Friday", "Saturday"))
-
-brfss_clean <- brfss_smart2010 %>% filter(QuestionID %in% c("GENHLTH")) 
+brfss_clean_2010<- brfss_smart2010 %>% janitor::clean_names() %>%
+  rename(state = locationabbr) %>%
+  rename(county = locationdesc) %>%
+  filter(question_id %in% c("GENHLTH")) %>%
+  mutate(county = gsub("^.{0,5}", "", county)) #sprinkle some regex to remove first 5 characters from every location description 
   
-
-#brfss_factor_response <- data.frame
-
-
+brfss_clean_2010$response <- factor(brfss_clean_2010$response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"), ordered = TRUE)
 ```
-
-
-
 
 Using this dataset, do or answer the following (commenting on the results of each):
 
 b) In 2002, which states were observed at 7 or more locations? What about in 2010?
 
+```{r}
+brfss_seven_2002 <- brfss_clean_2010 %>% 
+  filter(year %in% c("2002")) %>% 
+  group_by(state, geo_location)  #%>% filter(n(length(unique(GeoLocation))) > 7)
+
+brfss_seven_2010 <- brfss_clean_2010 %>% 
+  filter(year %in% c("2010")) %>% 
+  group_by(state, geo_location) #%>% filter(n(length(unique(GeoLocation))) > 7)
+
+```
 Find states with in 2002 with 7 or more unique geolocations. Repeat for 2010, use inline r.
+
+
 
 c) Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. 
 
-filter for excellent responses, have only year, state columns, mutate out a avg_data_value for locations per state.
-
 ```{r}
+
+excellent_brfss <- brfss_clean_2010 %>% 
+  filter(response %in% c("Excellent")) %>% 
+  group_by(state, year) %>%
+  mutate(avg_state_value = mean(data_value)) %>%
+  select(year, state, avg_state_value) %>%  distinct()
+  
 
 ```
 
 
 d) Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
-https://stats.idre.ucla.edu/r/faq/how-can-i-visualize-longitudinal-data-in-ggplot2/
 
 
 ```{r}
-
+p <- ggplot(data = excellent_brfss, aes(x = year, y = avg_state_value, group = state)) + 
+  geom_line(aes(color = state)) +
+    labs(
+    title = "Average Data Value by State",
+    subtitle = "2002-2010",
+    caption = "Source: BRFSS SMART 2010 from data.gov",
+    y = "Average State Value",
+    x = "Year"
+  ) +
+  #theme_minimal(base_family = "Arial") +
+  theme_minimal() +
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+    plot.title = element_text(size = 15, face = "bold"),
+    strip.text.y = element_text(angle = 270, face = "bold"),
+    strip.placement = "outside",
+    axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+    axis.text = element_text(size = 10),
+    legend.position = "right",
+    panel.grid.major.y = element_blank(),
+    )
+p
 ```
-
 
 e) Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
 
-use geom facet, box plots, violin or ridge plots should work fine
 
 ```{r}
+brfss_2006_2010 <- brfss_clean_2010 %>%  
+  filter(year %in% c("2006" , "2010"), state %in% c("NY"))
 
+p_graded_values <- ggplot(brfss_2006_2010, aes(x = data_value, y = response)) +
+   geom_density_ridges(scale = .85) +
+   facet_grid(~year)
+
+p_graded_values
 ```
 
 
@@ -296,31 +245,72 @@ Accelerometers have become an appealing alternative to self-report techniques fo
 
 This problem uses five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). The data can be downloaded here. In this spreadsheet, variables activity.* are the activity counts for each minute of a 24-hour day starting at midnight.
 
-
 (i) Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes.
 
-a) Load, tidy, and otherwise wrangle the data. 
+a) Load, tidy, and otherwise wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; include a weekday vs weekend variable; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+```{r}
+accel_data = read_csv(file = "./data/accel_data.csv")
+
+tidy_accel <- accel_data %>% 
+  janitor::clean_names() %>%
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    values_to = "activity")
+  
+
+```
 
 (b) Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
 
+The accel_data dataset records the accelerometer activity of a single 63yr male with BMI 25, a patient diagnosed with CHF at the Advanced Cardiac Care. The **_accel_data_** dataset has `r ncol(accel_data)` variables and `r nrow(accel_data)` observations, representing the man's motions throughout each minute of a day of  r count(accel_data$day_id)` days. The dataset is a`r class(accel_data)[2]`. 
 
 (c) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 
-
-(d) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
-
-
-
-
-
-
-When using pivot_longer names should be minute, so output is continuous
-
 ```{r}
+#total_activity_score = sum(tidy_accel$activity, na.RM = TRUE)
+
+aggr_minutes <- tidy_accel %>% 
+  group_by(day) %>% 
+  summarize((total_activity_score = sum(activity, na.RM = TRUE))) %>%
+  knitr::kable() #does sigfig matter..?
 
 ```
 
 
+
+(d) Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+```{r}
+# tip from TA "When using pivot_longer names should be minute, so output is continuous..."
+breaks = seq(from = 0, to = 1440, by = 240)
+labels = c("0", "4", "8", "12", "16", "20", "24")
+
+p_accel_24hr <- tidy_accel %>% 
+  group_by(day, minute) %>%
+  ggplot(aes(x = minute, y = activity, color = day)) + #tried shape but ran out of usable shapes at 5?
+  geom_point() +
+  labs(
+    title = "24-hour activity time courses",
+    subtitle = "By day",
+    caption = "CUIMC Advanced Cardiac Care",
+    y = "Activity Count",
+    x = "Time"
+  ) + 
+  #scale_x_continuous(breaks, labels) + couldnt get working
+  theme_classic() +
+  theme(
+    plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
+    plot.title = element_text(size = 15, face = "bold"),
+    strip.text.y = element_text(angle = 270, face = "bold"),
+    strip.placement = "outside",
+    axis.title.x = element_text(margin = margin(t = 0.5, b = 0.5, unit = "cm")),
+    axis.text = element_text(size = 10),
+    legend.position = "right",
+    panel.grid.major.y = element_blank(),
+    )
+
+p_accel_24hr
+```
 
 
 
