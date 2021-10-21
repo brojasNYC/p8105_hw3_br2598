@@ -2,7 +2,7 @@
 title: "p8105_hw3_br2598"
 author: "Brandon Rojas"
 date: "10/17/2021"
-output: html_document
+output: github_document
 ---
 ```{r setup, include=FALSE}
 library(p8105.datasets)
@@ -263,7 +263,7 @@ tidy_accel <- accel_data %>%
 
 (b) Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
 
-The accel_data dataset records the accelerometer activity of a single 63yr male with BMI 25, a patient diagnosed with CHF at the Advanced Cardiac Care. The **_accel_data_** dataset has `r ncol(accel_data)` variables and `r nrow(accel_data)` observations, representing the man's motions throughout each minute of a day of  r count(accel_data$day_id)` days. The dataset is a`r class(accel_data)[2]`. 
+The accel_data dataset records the accelerometer activity of a single 63yr male with BMI 25, a patient diagnosed with CHF at the Advanced Cardiac Care. The **_accel_data_** dataset has `r ncol(accel_data)` variables and `r nrow(accel_data)` observations, representing the man's motions throughout each minute of a day of  `r last(unique(accel_data$day_id))` days. The dataset is a`r class(accel_data)[2]`. 
 
 (c) Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 
