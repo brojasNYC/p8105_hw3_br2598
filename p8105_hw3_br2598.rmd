@@ -296,7 +296,7 @@ p_accel_24hr <- tidy_accel %>%
     y = "Activity Count",
     x = "Time"
   ) + 
-  #scale_x_continuous(breaks, labels) + couldnt get working
+  #scale_x_continuous(breaks, labels)
   theme_classic() +
   theme(
     plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm"),
